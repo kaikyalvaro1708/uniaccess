@@ -51,6 +51,12 @@ public class PersonService {
         return new PersonDetailsData(person);
     }
 
+    public PersonDetailsData findByLogin(String login) {
+        var person = repository.findByLogin(login)
+                .orElseThrow(() -> new PersonNotFoundException(0L));
+        return new PersonDetailsData(person);
+    }
+
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new PersonNotFoundException(id);

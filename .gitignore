@@ -8,12 +8,20 @@ target/
 # Node / Frontend
 node_modules/
 dist/
+dist-ssr/
 .vite/
+.cache/
+*.local
 
 # IDE
 .idea/
 .vscode/
 *.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # OS
 .DS_Store
@@ -21,9 +29,18 @@ Thumbs.db
 
 # Env
 .env
-.env.local
+.env.*
+!.env.example
 application-local.properties
 
 # Logs
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testes / cobertura
+coverage/
+test-results/

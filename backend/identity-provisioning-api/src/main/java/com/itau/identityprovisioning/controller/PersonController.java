@@ -54,6 +54,12 @@ public class PersonController {
         return ResponseEntity.ok(service.findById(id));
     }
 
+    // busca os detalhes de uma pessoa pelo login gerado
+    @GetMapping("/login/{login}")
+    public ResponseEntity<PersonDetailsData> findByLogin(@PathVariable String login) {
+        return ResponseEntity.ok(service.findByLogin(login));
+    }
+
     // remove uma pessoa pelo id
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
