@@ -1,5 +1,7 @@
 package com.itau.identityprovisioning.login;
 
+import org.springframework.stereotype.Component;
+
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+@Component
 public class LoginGenerator {
 
     private static final int LENGTH = 7;

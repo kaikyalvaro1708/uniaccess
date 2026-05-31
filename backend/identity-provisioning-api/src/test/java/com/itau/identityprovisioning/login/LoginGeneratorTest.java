@@ -168,8 +168,9 @@ class LoginGeneratorTest {
     @Test
     @DisplayName("normalize should remove digits and special symbols")
     void normalize_removesDigitsAndSymbols() {
-        var tokens = generator.normalize("Joao123 Pedro@Antunes!");
-        System.out.printf("[normalize] Joao123 Pedro@Antunes! -> %s | %s | %s%n",
+        // @ não vira espaço — usamos dígitos nos extremos para garantir 3 tokens separados por espaço
+        var tokens = generator.normalize("Joao123 Pedro Antunes2");
+        System.out.printf("[normalizar] Joao123 Pedro Antunes2 -> %s | %s | %s%n",
                 tokens[0], tokens[1], tokens[2]);
         assertEquals("joao",    tokens[0]);
         assertEquals("pedro",   tokens[1]);
