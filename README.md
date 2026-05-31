@@ -13,6 +13,9 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-white?style=for-the-badge&logo=postgresql&logoColor=white&labelColor=003B71)
 ![Maven](https://img.shields.io/badge/Maven-Build-white?style=for-the-badge&logo=apachemaven&logoColor=white&labelColor=003B71)
 ![JUnit 5](https://img.shields.io/badge/JUnit-5-white?style=for-the-badge&logo=junit5&logoColor=white&labelColor=003B71)
+![React](https://img.shields.io/badge/React-19-white?style=for-the-badge&logo=react&logoColor=white&labelColor=003B71)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-white?style=for-the-badge&logo=typescript&logoColor=white&labelColor=003B71)
+![Vite](https://img.shields.io/badge/Vite-8-white?style=for-the-badge&logo=vite&logoColor=white&labelColor=003B71)
 
 </div>
 
@@ -20,7 +23,7 @@
 
 ## Sobre o projeto
 
-Aplicação full stack de **cadastro de pessoas** com geração automática de login. O sistema:
+Aplicação **full stack** de cadastro de pessoas com geração automática de login. O sistema conta com uma interface web (**UniAccess**) construída em React e um backend REST em Spring Boot. O sistema:
 
 - Valida todos os campos de entrada (nome, CPF com dígito verificador, e-mail, data de nascimento, CEP)
 - Consulta o endereço automaticamente via ViaCEP (padrão BFF — o frontend nunca chama o ViaCEP diretamente)
@@ -37,6 +40,7 @@ Aplicação full stack de **cadastro de pessoas** com geração automática de l
 - Docker Desktop
 - Java 21
 - Maven
+- Node.js 22+
 
 ### 1. Sobe o banco
 
@@ -53,10 +57,21 @@ mvn spring-boot:run
 
 O Flyway roda automaticamente ao iniciar — cria a tabela e carrega os 20 registros legados.
 
-### 3. Acessa
+### 3. Sobe o Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+As chamadas à API são proxiadas automaticamente para o backend via Vite.
+
+### 4. Acessa
 
 | O quê | URL |
 |---|---|
+| **Interface web** | http://localhost:5173 |
 | Swagger | http://localhost:8080/swagger-ui |
 | Health | http://localhost:8080/actuator/health |
 
@@ -192,7 +207,15 @@ Cobre: happy path, colisão com dados reais da massa, normalização de acentos/
 ## Estrutura do projeto
 
 ```
-backend/identity-provisioning-api/
+case-itau/
+├── .github/workflows/ci.yml          # Pipeline CI (backend + frontend)
+├── frontend/                         # React 19 + Vite + Tailwind
+│   └── src/
+│       ├── components/               # LeftPanel, PersonForm, LoginForm…
+│       ├── services/api.ts           # Chamadas ao backend
+│       ├── types/
+│       └── utils/
+└── backend/identity-provisioning-api/
 └── src/main/java/com/itau/identityprovisioning/
     ├── controller/
     │   ├── PersonController.java
@@ -248,3 +271,5 @@ src/main/resources/
 | Banco local | Docker Compose |
 | Testes | JUnit 5 |
 | Build | Maven |
+| **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS |
+| **CI** | GitHub Actions (compile · tests · lint · build) |
