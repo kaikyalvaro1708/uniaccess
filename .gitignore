@@ -44,3 +44,7 @@ pnpm-debug.log*
 # Testes / cobertura
 coverage/
 test-results/
+
+# Docker
+docker-compose.override.yml
+.docker/
