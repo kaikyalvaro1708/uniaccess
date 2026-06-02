@@ -2,7 +2,11 @@
 
 <br/>
 
-# Identity Provisioning API
+<img src="frontend/src/img/logo_uniaccess.png" alt="UniAccess" width="220"/>
+
+<br/>
+
+# UniAccess — Identidade Digital
 
 **Desafio Técnico — Engenharia de Software Jr.**
 
@@ -16,8 +20,23 @@
 ![React](https://img.shields.io/badge/React-19-white?style=for-the-badge&logo=react&logoColor=white&labelColor=003B71)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-white?style=for-the-badge&logo=typescript&logoColor=white&labelColor=003B71)
 ![Vite](https://img.shields.io/badge/Vite-8-white?style=for-the-badge&logo=vite&logoColor=white&labelColor=003B71)
+![Docker](https://img.shields.io/badge/Docker-Compose-white?style=for-the-badge&logo=docker&logoColor=white&labelColor=003B71)
 
 </div>
+
+---
+
+## Sumário
+
+- [Sobre o projeto](#sobre-o-projeto)
+- [Arquitetura e comunicação](#arquitetura-e-comunicação)
+- [Como rodar](#como-rodar)
+- [Endpoints](#endpoints)
+- [Validações](#validações)
+- [Segurança e boas práticas](#segurança-e-boas-práticas)
+- [Geração automática de login](#geração-automática-de-login)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Tech stack](#tech-stack)
 
 ---
 
@@ -33,47 +52,108 @@ Aplicação **full stack** de cadastro de pessoas com geração automática de l
 
 ---
 
-## Como rodar
+## Arquitetura e comunicação
 
-### Pré-requisitos
-
-- Docker Desktop
-- Java 21
-- Maven
-- Node.js 22+
-
-### 1. Sobe o banco
-
-```bash
-docker-compose up -d
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Docker network                           │
+│                                                                 │
+│  ┌──────────────┐   /api/*   ┌──────────────┐   JDBC   ┌─────┐ │
+│  │   Frontend   │ ─────────▶ │   Backend    │ ────────▶ │  DB │ │
+│  │  nginx :80   │            │ Spring Boot  │           │ PG  │ │
+│  └──────────────┘            │    :8080     │           └─────┘ │
+│         ▲                    └──────┬───────┘             :5432 │
+└─────────┼──────────────────────────┼─────────────────────────┘ │
+          │                          │ ViaCEP (externo)           
+     :5173 (host)               :8080 (host)                      
 ```
 
-### 2. Sobe a API
+### Frontend → Backend
 
+O React nunca chama o backend diretamente pelo IP. Todas as requisições são feitas para caminhos relativos (`/api/persons`, `/api/zip-code/...`):
+
+- **Em desenvolvimento** (Vite): o `vite.config.ts` tem um proxy que redireciona `/api/*` para `http://localhost:8080`.
+- **Em produção / Docker**: o nginx faz esse mesmo papel — recebe `/api/*` e faz proxy para `http://backend:8080/api/*` dentro da rede Docker.
+
+Isso significa que o endereço do backend **nunca aparece no código-fonte do frontend**.
+
+### Backend → Banco de dados
+
+O Spring Boot conecta ao PostgreSQL via JDBC. A URL de conexão muda conforme o ambiente:
+
+| Ambiente | URL |
+|---|---|
+| Local (dev) | `jdbc:postgresql://localhost:5433/identity_provisioning` |
+| Docker | `jdbc:postgresql://postgres:5432/identity_provisioning` |
+
+No Docker, o `docker-compose.yml` injeta a URL correta via variável de ambiente (`SPRING_DATASOURCE_URL`), sobrescrevendo o `application.properties` sem precisar alterar nenhum arquivo.
+
+O **Flyway** roda automaticamente ao iniciar o backend e aplica as migrations pendentes (`V1__create_person_table.sql`, `V2__insert_legacy_persons.sql`).
+
+### O papel do Docker
+
+O Docker Compose cria uma **rede privada isolada** onde os serviços se enxergam pelo nome (`postgres`, `backend`, `frontend`). Do ponto de vista do host, apenas as portas mapeadas ficam acessíveis:
+
+| Serviço | Porta interna | Porta no host |
+|---|---|---|
+| PostgreSQL | 5432 | 5433 |
+| Backend | 8080 | 8080 |
+| Frontend (nginx) | 80 | 5173 |
+
+A ordem de inicialização é garantida pelo `depends_on` com `healthcheck` no postgres — o backend só sobe depois que o banco está pronto para aceitar conexões.
+
+---
+
+## Como rodar
+
+### ▶ Com Docker (recomendado)
+
+Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+```bash
+docker-compose up --build
+```
+
+Esse único comando sobe os três serviços em ordem:
+1. **PostgreSQL** — aguarda o healthcheck antes de liberar o backend
+2. **Backend** — builda o JAR, roda as migrations Flyway automaticamente
+3. **Frontend** — builda o React/Vite e serve via nginx
+
+| O quê | URL |
+|---|---|
+| **Interface web** | http://localhost:5173 |
+| Swagger UI | http://localhost:8080/swagger-ui |
+| Health | http://localhost:8080/actuator/health |
+
+> **Primeiro build:** o Maven baixa todas as dependências do zero — pode levar 3–5 minutos. Os builds seguintes usam cache e são muito mais rápidos.
+>
+> **Da segunda vez:** `docker-compose up` (sem `--build`) aproveita o cache integralmente.
+
+---
+
+### 🛠 Rodando localmente (modo dev)
+
+Pré-requisitos: Java 21 · Maven · Node.js 22+ · PostgreSQL 16+
+
+**1. Sobe o banco**
+```bash
+docker-compose up -d postgres
+```
+
+**2. Sobe o backend**
 ```bash
 cd backend/identity-provisioning-api
 mvn spring-boot:run
 ```
 
-O Flyway roda automaticamente ao iniciar — cria a tabela e carrega os 20 registros legados.
-
-### 3. Sobe o Frontend
-
+**3. Sobe o frontend**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-As chamadas à API são proxiadas automaticamente para o backend via Vite.
-
-### 4. Acessa
-
-| O quê | URL |
-|---|---|
-| **Interface web** | http://localhost:5173 |
-| Swagger | http://localhost:8080/swagger-ui |
-| Health | http://localhost:8080/actuator/health |
+As chamadas à API são proxiadas automaticamente pelo Vite para `localhost:8080`.
 
 ---
 
@@ -197,7 +277,7 @@ A unicidade é garantida em dois níveis: checagem em código antes de salvar + 
 
 ```bash
 cd backend/identity-provisioning-api
-JAVA_HOME="/c/Program Files/Java/jdk-21" mvn test -Dtest=LoginGeneratorTest
+mvn test -Dtest=LoginGeneratorTest
 ```
 
 Cobre: happy path, colisão com dados reais da massa, normalização de acentos/cedilha, nomes curtos e as três invariantes (7 chars, só a–z, sem dígito).

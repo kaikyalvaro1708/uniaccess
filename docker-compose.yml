@@ -1,4 +1,6 @@
 services:
+
+  # ── banco de dados ──────────────────────────────────────────────────────────
   postgres:
     image: postgres:16
     container_name: identity-provisioning-db
@@ -10,6 +12,37 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d identity_provisioning"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── backend Spring Boot ─────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend/identity-provisioning-api
+    container_name: identity-provisioning-api
+    environment:
+      # sobrescreve application.properties para apontar ao serviço postgres da rede Docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/identity_provisioning
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── frontend React (nginx) ──────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+    container_name: uniaccess-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
