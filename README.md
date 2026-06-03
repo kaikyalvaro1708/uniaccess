@@ -2,11 +2,9 @@
 
 <br/>
 
-<img src="frontend/src/img/logo_uniaccess.png" alt="UniAccess" width="220"/>
+<img src="frontend/src/img/logomarca_uniaccess.png" alt="UniAccess" width="75%"/>
 
 <br/>
-
-# UniAccess — Identidade Digital
 
 **Desafio Técnico — Engenharia de Software Jr.**
 
@@ -38,6 +36,13 @@
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Tech stack](#tech-stack)
 
+### Documentação adicional
+
+| Documento                                | Descrição                          |
+| ---------------------------------------- | ---------------------------------- |
+| [docs/CASE.md](docs/CASE.md)             | Enunciado original do case técnico |
+| [docs/EVIDENCIAS.md](docs/EVIDENCIAS.md) | Evidências de testes com prints    |
+
 ---
 
 ## Sobre o projeto
@@ -64,8 +69,8 @@ Aplicação **full stack** de cadastro de pessoas com geração automática de l
 │  └──────────────┘            │    :8080     │           └─────┘ │
 │         ▲                    └──────┬───────┘             :5432 │
 └─────────┼──────────────────────────┼─────────────────────────┘ │
-          │                          │ ViaCEP (externo)           
-     :5173 (host)               :8080 (host)                      
+          │                          │ ViaCEP (externo)
+     :5173 (host)               :8080 (host)
 ```
 
 ### Frontend → Backend
@@ -81,10 +86,10 @@ Isso significa que o endereço do backend **nunca aparece no código-fonte do fr
 
 O Spring Boot conecta ao PostgreSQL via JDBC. A URL de conexão muda conforme o ambiente:
 
-| Ambiente | URL |
-|---|---|
+| Ambiente    | URL                                                      |
+| ----------- | -------------------------------------------------------- |
 | Local (dev) | `jdbc:postgresql://localhost:5433/identity_provisioning` |
-| Docker | `jdbc:postgresql://postgres:5432/identity_provisioning` |
+| Docker      | `jdbc:postgresql://postgres:5432/identity_provisioning`  |
 
 No Docker, o `docker-compose.yml` injeta a URL correta via variável de ambiente (`SPRING_DATASOURCE_URL`), sobrescrevendo o `application.properties` sem precisar alterar nenhum arquivo.
 
@@ -94,11 +99,11 @@ O **Flyway** roda automaticamente ao iniciar o backend e aplica as migrations pe
 
 O Docker Compose cria uma **rede privada isolada** onde os serviços se enxergam pelo nome (`postgres`, `backend`, `frontend`). Do ponto de vista do host, apenas as portas mapeadas ficam acessíveis:
 
-| Serviço | Porta interna | Porta no host |
-|---|---|---|
-| PostgreSQL | 5432 | 5433 |
-| Backend | 8080 | 8080 |
-| Frontend (nginx) | 80 | 5173 |
+| Serviço          | Porta interna | Porta no host |
+| ---------------- | ------------- | ------------- |
+| PostgreSQL       | 5432          | 5433          |
+| Backend          | 8080          | 8080          |
+| Frontend (nginx) | 80            | 5173          |
 
 A ordem de inicialização é garantida pelo `depends_on` com `healthcheck` no postgres — o backend só sobe depois que o banco está pronto para aceitar conexões.
 
@@ -115,15 +120,16 @@ docker-compose up --build
 ```
 
 Esse único comando sobe os três serviços em ordem:
+
 1. **PostgreSQL** — aguarda o healthcheck antes de liberar o backend
 2. **Backend** — builda o JAR, roda as migrations Flyway automaticamente
 3. **Frontend** — builda o React/Vite e serve via nginx
 
-| O quê | URL |
-|---|---|
-| **Interface web** | http://localhost:5173 |
-| Swagger UI | http://localhost:8080/swagger-ui |
-| Health | http://localhost:8080/actuator/health |
+| O quê             | URL                                   |
+| ----------------- | ------------------------------------- |
+| **Interface web** | http://localhost:5173                 |
+| Swagger UI        | http://localhost:8080/swagger-ui      |
+| Health            | http://localhost:8080/actuator/health |
 
 > **Primeiro build:** o Maven baixa todas as dependências do zero — pode levar 3–5 minutos. Os builds seguintes usam cache e são muito mais rápidos.
 >
@@ -136,17 +142,20 @@ Esse único comando sobe os três serviços em ordem:
 Pré-requisitos: Java 21 · Maven · Node.js 22+ · PostgreSQL 16+
 
 **1. Sobe o banco**
+
 ```bash
 docker-compose up -d postgres
 ```
 
 **2. Sobe o backend**
+
 ```bash
 cd backend/identity-provisioning-api
 mvn spring-boot:run
 ```
 
 **3. Sobe o frontend**
+
 ```bash
 cd frontend
 npm install
@@ -163,7 +172,7 @@ As chamadas à API são proxiadas automaticamente pelo Vite para `localhost:8080
 
 ```json
 {
-  "fullName": "Joao Pedro Silva",
+  "fullName": "João Pedro Silva",
   "document": "529.982.247-25",
   "email": "joao.pedro@email.com",
   "dateOfBirth": "1998-05-09",
@@ -181,7 +190,7 @@ Resposta `201 Created`:
 ```json
 {
   "id": 21,
-  "fullName": "Joao Pedro Silva",
+  "fullName": "João Pedro Silva",
   "document": "529.982.247-25",
   "email": "joao.pedro@email.com",
   "dateOfBirth": "1998-05-09",
@@ -214,20 +223,48 @@ GET /api/persons?page=0&size=10&sort=fullName,asc
 
 ### `GET /api/persons/{id}` — buscar por id
 
+### `GET /api/persons/login/{login}` — buscar pelo login
+
+```
+GET /api/persons/login/mariasi
+```
+
+### `GET /api/persons/email/{email}` — recuperar login pelo e-mail
+
+Usado no fluxo "Esqueci meu login" — retorna os dados da pessoa (incluindo o login gerado) a partir do e-mail cadastrado.
+
+```
+GET /api/persons/email/maria@email.com
+```
+
+Resposta `200 OK`:
+
+```json
+{
+  "id": 1,
+  "fullName": "Maria Silva Santos",
+  "document": "52998224725",
+  "email": "maria@email.com",
+  "dateOfBirth": "1998-03-14",
+  "login": "mariasn",
+  "createdAt": "2026-06-02T10:00:00"
+}
+```
+
 ### `DELETE /api/persons/{id}` — remover
 
 ---
 
 ## Validações
 
-| Campo | Regras |
-|---|---|
-| `fullName` | Obrigatório, apenas letras e espaços (sem acento/cedilha), mínimo 2 palavras |
-| `document` | Obrigatório, CPF com dígito verificador válido |
-| `email` | Obrigatório, formato válido |
-| `dateOfBirth` | Obrigatório, não pode ser futura |
-| `zipCode` | Obrigatório, formato `XXXXX-XXX` ou `XXXXXXXX` |
-| `street`, `neighborhood`, `city`, `state` | Obrigatórios |
+| Campo                                     | Regras                                                                       |
+| ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `fullName`                                | Obrigatório, mínimo 2 palavras, apenas letras (acentos e cedilha aceitos, sem números ou símbolos) |
+| `document`                                | Obrigatório, CPF com dígito verificador válido                               |
+| `email`                                   | Obrigatório, formato válido                                                  |
+| `dateOfBirth`                             | Obrigatório, não pode ser futura                                             |
+| `zipCode`                                 | Obrigatório, formato `XXXXX-XXX` ou `XXXXXXXX`                               |
+| `street`, `neighborhood`, `city`, `state` | Obrigatórios                                                                 |
 
 Erros retornam no padrão **RFC 7807 Problem Details**:
 
@@ -255,16 +292,19 @@ Erros retornam no padrão **RFC 7807 Problem Details**:
 
 Quando uma pessoa é cadastrada, o sistema gera automaticamente um **login de exatamente 7 letras minúsculas (a–z)** derivado do nome.
 
-| Nome | Login gerado |
-|---|---|
-| Maria Silva Santos | `mariasi` |
-| Joao Pedro Silva | `joaoped` |
-| Ana Clara Souza | `anaclar` |
-| Carlos Eduardo Lima | `carlose` |
+| Nome armazenado       | Login gerado |
+| --------------------- | ------------ |
+| Maria Silva Santos    | `mariasi`    |
+| João Pedro Silva      | `joaoped`    |
+| Ana Clara Souza       | `anaclar`    |
+| Carlos Eduardo Lima   | `carlose`    |
+| Conceição Araújo Lima | `conceic`    |
+
+> O sistema aceita nomes com acentos, cedilha e til — armazenados como digitados. A normalização ocorre **internamente** apenas para gerar o login.
 
 ### Como funciona
 
-1. **Normaliza** o nome: remove acentos/cedilha via NFD, minúsculo, mantém só `[a-z]`
+1. **Normaliza** o nome internamente: remove acentos/cedilha via NFD, minúsculo, mantém só `[a-z]` — apenas para geração do login, sem alterar o dado armazenado
 2. **Candidato 1** — primeiro nome + início do sobrenome até 7 chars: `maria + si → mariasi`
 3. **Candidatos seguintes** — avança progressivamente nas letras dos sobrenomes
 4. **Inverte prioridade** — usa o último sobrenome como base
@@ -291,7 +331,7 @@ case-itau/
 ├── .github/workflows/ci.yml          # Pipeline CI (backend + frontend)
 ├── frontend/                         # React 19 + Vite + Tailwind
 │   └── src/
-│       ├── components/               # LeftPanel, PersonForm, LoginForm…
+│       ├── components/               # LeftPanel, PersonForm, LoginForm, RecoverLoginForm…
 │       ├── services/api.ts           # Chamadas ao backend
 │       ├── types/
 │       └── utils/
@@ -339,17 +379,17 @@ src/main/resources/
 
 ## Tech stack
 
-| Camada | Tecnologia |
-|---|---|
-| Linguagem | Java 21 |
-| Framework | Spring Boot 3.4.4 |
-| Persistência | Spring Data JPA + PostgreSQL 16 |
-| Migrations | Flyway |
-| Validação | Bean Validation + validators customizados |
-| Documentação | SpringDoc OpenAPI (Swagger) |
-| Observabilidade | Spring Boot Actuator |
-| Banco local | Docker Compose |
-| Testes | JUnit 5 |
-| Build | Maven |
-| **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS |
-| **CI** | GitHub Actions (compile · tests · lint · build) |
+| Camada          | Tecnologia                                      |
+| --------------- | ----------------------------------------------- |
+| Linguagem       | Java 21                                         |
+| Framework       | Spring Boot 3.4.4                               |
+| Persistência    | Spring Data JPA + PostgreSQL 16                 |
+| Migrations      | Flyway                                          |
+| Validação       | Bean Validation + validators customizados       |
+| Documentação    | SpringDoc OpenAPI (Swagger)                     |
+| Observabilidade | Spring Boot Actuator                            |
+| Banco local     | Docker Compose                                  |
+| Testes          | JUnit 5                                         |
+| Build           | Maven                                           |
+| **Frontend**    | React 19 + TypeScript + Vite + Tailwind CSS     |
+| **CI**          | GitHub Actions (compile · tests · lint · build) |

@@ -73,7 +73,7 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSuccess }) => {
     const e: Partial<RegisterPersonData> = {};
 
     if (!isValidName(form.fullName))
-      e.fullName = "Mínimo duas palavras, apenas letras";
+      e.fullName = "Informe nome e sobrenome, sem números ou símbolos";
     if (!isValidCpf(form.document))
       e.document = "CPF inválido";
     if (!isValidEmail(form.email))

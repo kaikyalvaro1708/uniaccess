@@ -7,6 +7,7 @@ interface FormFieldProps {
   onChange: (value: string) => void;
   onBlur?: () => void;
   error?: string;
+  hint?: string;
   type?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -22,6 +23,7 @@ const FormField: React.FC<FormFieldProps> = ({
   onChange,
   onBlur,
   error,
+  hint,
   type = "text",
   placeholder,
   disabled = false,
@@ -63,7 +65,10 @@ const FormField: React.FC<FormFieldProps> = ({
           .filter(Boolean)
           .join(" ")}
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error
+        ? <p className="text-xs text-red-500">{error}</p>
+        : hint && <p className="text-xs text-slate-400">{hint}</p>
+      }
     </div>
   );
 };

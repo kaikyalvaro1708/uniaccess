@@ -29,6 +29,12 @@ export async function findPersonByLogin(login: string): Promise<PersonDetailsDat
   return res.json()
 }
 
+export async function findPersonByEmail(email: string): Promise<PersonDetailsData> {
+  const res = await fetch(`${BASE}/persons/email/${encodeURIComponent(email.trim().toLowerCase())}`)
+  if (!res.ok) throw await res.json()
+  return res.json()
+}
+
 export async function fetchPersons(page = 0, size = 10) {
   const res = await fetch(`${BASE}/persons?page=${page}&size=${size}&sort=fullName,asc`)
   if (!res.ok) throw await res.json()
