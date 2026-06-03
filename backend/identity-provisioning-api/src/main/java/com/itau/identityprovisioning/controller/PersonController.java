@@ -60,6 +60,12 @@ public class PersonController {
         return ResponseEntity.ok(service.findByLogin(login));
     }
 
+    // recupera os dados de uma pessoa pelo e-mail (usado no fluxo "esqueci meu login")
+    @GetMapping("/email/{email}")
+    public ResponseEntity<PersonDetailsData> findByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(service.findByEmail(email));
+    }
+
     // remove uma pessoa pelo id
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

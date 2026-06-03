@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { findPersonByLogin } from "../services/api";
+import RecoverLoginForm from "./RecoverLoginForm";
 import type { PersonDetailsData } from "../types/person";
 
 interface LoginFormProps {
@@ -7,9 +8,12 @@ interface LoginFormProps {
   onBack: () => void;
 }
 
+type Mode = "login" | "recover";
+
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onBack }) => {
-  const [login, setLogin] = useState("");
-  const [error, setError] = useState("");
+  const [mode, setMode]     = useState<Mode>("login");
+  const [login, setLogin]   = useState("");
+  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -33,6 +37,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onBack }) => {
     }
   };
 
+  /* ── modo recuperação ──────────────────────────────────────────── */
+  if (mode === "recover") {
+    return <RecoverLoginForm onBack={() => setMode("login")} />;
+  }
+
+  /* ── modo login ────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-6">
 
@@ -95,15 +105,26 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onBack }) => {
         </button>
       </form>
 
-      <p className="text-xs text-slate-400 text-center">
-        Ainda não tem cadastro?{" "}
-        <button
-          onClick={onBack}
-          className="text-orange font-semibold hover:underline cursor-pointer"
-        >
-          Cadastrar agora
-        </button>
-      </p>
+      <div className="flex flex-col gap-2 text-center">
+        <p className="text-xs text-slate-400">
+          Ainda não tem cadastro?{" "}
+          <button
+            onClick={onBack}
+            className="text-orange font-semibold hover:underline cursor-pointer"
+          >
+            Cadastrar agora
+          </button>
+        </p>
+        <p className="text-xs text-slate-400">
+          Esqueceu o login?{" "}
+          <button
+            onClick={() => setMode("recover")}
+            className="text-orange font-semibold hover:underline cursor-pointer"
+          >
+            Recuperar pelo e-mail
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

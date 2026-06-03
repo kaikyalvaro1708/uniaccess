@@ -17,9 +17,10 @@ export function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
-// only plain ASCII letters and spaces, at least two words
+// accepts names with accents, cedilha and til (João, Çiçek, Ângela)
+// mirrors backend NameValidator which uses \p{L}+ (any Unicode letter)
 export function isValidName(value: string): boolean {
-  return /^[a-zA-Z]+([ ]+[a-zA-Z]+)+$/.test(value.trim())
+  return /^[\p{L}]+([ ]+[\p{L}]+)+$/u.test(value.trim())
 }
 
 export function isNotFutureDate(value: string): boolean {
