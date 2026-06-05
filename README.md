@@ -44,6 +44,14 @@
 | [docs/AWS_DEPLOYMENT.md](docs/AWS_DEPLOYMENT.md) | EXTRA — Prévia de arquitetura AWS |
 | [docs/CASE.md](docs/CASE.md) | Enunciado original do case técnico |
 
+### 🎬 Vídeos
+
+| Vídeo | Descrição |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| [▶ Docker Compose rodando](https://youtu.be/CkmTJIqJPjY) | Passo a passo completo subindo a aplicação com Docker |
+| [▶ Cadastro e login pelo frontend](https://youtu.be/U2H1cLV6w0E) | Fluxo de cadastro até o login bem-sucedido na interface |
+| [▶ Defesa das decisões técnicas](https://youtu.be/754q7458muI) | Explicação e defesa das escolhas de arquitetura e tech |
+
 ---
 
 ## Sobre o projeto
@@ -70,7 +78,10 @@ O **nginx** serve o frontend React e atua como proxy reverso — todas as chamad
 
 ### ▶ Com Docker (recomendado)
 
+
 Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+🎬 **Vídeo tutorial:** veja o passo a passo completo rodando com Docker em [youtu.be/CkmTJIqJPjY](https://youtu.be/CkmTJIqJPjY)
 
 ```bash
 docker-compose up --build
@@ -85,6 +96,8 @@ Sobe os três serviços em ordem: PostgreSQL → Backend (migrations automática
 | Health | http://localhost:8080/actuator/health |
 
 > **Primeiro build:** Maven baixa as dependências do zero — pode levar 3–5 min. Builds seguintes usam cache.
+
+
 
 ---
 
@@ -113,33 +126,15 @@ As chamadas à API são proxiadas automaticamente pelo Vite para `localhost:8080
 
 Ao subir com `docker-compose up --build`, o banco já vem com **20 cadastros legados** inseridos automaticamente pela migration `V2`. Use os dados abaixo para explorar a aplicação sem precisar cadastrar nada primeiro.
 
-### Acessar via login (fluxo "Entrar")
-
-| Login | Nome na base |
-| ------- | ----------------------- |
-| `mariasi` | Maria Silva Santos |
-| `joaoped` | Joao Pedro Alves |
-| `anaclar` | Ana Clara Souza |
-| `carlose` | Carlos Eduardo Lima |
-| `paulafe` | Paula Fernanda Reis |
-
-### Recuperar login pelo e-mail (fluxo "Esqueci meu login")
-
-| E-mail | Login que será exibido |
-| ------------------------------------ | -------------- |
-| `maria.silva.santos1@exemplo.com` | `mariasi` |
-| `joao.pedro.alves@exemplo.com` | `joaoped` |
-| `lucas.henrique.prado@exemplo.com` | `lucashe` |
-
 ### Cadastrar uma nova pessoa (fluxo principal)
 
-CPFs válidos prontos para usar no formulário — nenhum deles está na base:
+Dados completos prontos para usar no formulário — nenhum desses CPFs está na base:
 
-| CPF | CEP sugerido |
-| --------------- | ------------ |
-| `529.982.247-25` | `01310-100` |
-| `111.444.777-35` | `04538-133` |
-| `153.509.460-56` | `20040-020` |
+| Nome | CPF | Data de nascimento | E-mail | CEP sugerido |
+| -------------------------- | --------------- | ------------------ | ------------------------------ | ------------ |
+| Fernanda Cristina Barbosa | `845.213.769-91` | `1992-08-23` | `fernanda.barbosa@email.com` | `01310-100` |
+| Rafael Augusto Mendes | `376.094.825-10` | `1987-11-15` | `rafael.mendes@email.com` | `30130-010` |
+| Juliana Costa Freitas | `261.854.037-90` | `2001-04-07` | `juliana.freitas@email.com` | `80010-010` |
 
 > O endereço preenche automaticamente ao sair do campo CEP.
 
@@ -151,16 +146,16 @@ CPFs válidos prontos para usar no formulário — nenhum deles está na base:
 
 ```json
 {
-  "fullName": "João Pedro Silva",
-  "document": "529.982.247-25",
-  "email": "joao.pedro@email.com",
-  "dateOfBirth": "1998-05-09",
+  "fullName": "Fernanda Cristina Barbosa",
+  "document": "845.213.769-91",
+  "email": "fernanda.barbosa@email.com",
+  "dateOfBirth": "1992-08-23",
   "zipCode": "01310-100",
   "street": "Avenida Paulista",
   "neighborhood": "Bela Vista",
   "city": "São Paulo",
   "state": "SP",
-  "complement": "Apto 42"
+  "complement": "Apto 301"
 }
 ```
 
@@ -169,11 +164,11 @@ Resposta `201 Created`:
 ```json
 {
   "id": 21,
-  "fullName": "João Pedro Silva",
-  "document": "529.982.247-25",
-  "email": "joao.pedro@email.com",
-  "dateOfBirth": "1998-05-09",
-  "login": "joaoped",
+  "fullName": "Fernanda Cristina Barbosa",
+  "document": "845.213.769-91",
+  "email": "fernanda.barbosa@email.com",
+  "dateOfBirth": "1992-08-23",
+  "login": "fernand",
   "createdAt": "2026-05-31T10:00:00"
 }
 ```
