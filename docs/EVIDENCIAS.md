@@ -22,25 +22,40 @@
 
 ## 1. Ambiente rodando
 
-### Docker Compose — todos os serviços no ar
+### 🎬 Vídeo demonstração — Docker Compose rodando
 
-> `docker-compose up --build` executado com sucesso. Três serviços ativos: postgres, backend e frontend.
+> Tutorial completo de como subir a aplicação com Docker Compose.  
+> Cobre desde o `docker-compose up --build` até a interface acessível no browser em `localhost:5173`.
 
-<!-- Adicione o print abaixo -->
-![Docker Compose rodando](./prints/01-docker-compose-up.png)
+[![Assista ao vídeo no YouTube](https://img.youtube.com/vi/CkmTJIqJPjY/maxresdefault.jpg)](https://youtu.be/CkmTJIqJPjY)
+
+> 🔗 Link direto: https://youtu.be/CkmTJIqJPjY
 
 ---
 
-### Interface acessível em localhost:5173
+### 🎬 Vídeo — Defesa das decisões técnicas
 
-> Tela inicial do UniAccess no browser após `docker-compose up`.
+> Explicação e defesa das principais decisões de arquitetura e tecnologia adotadas no projeto.  
+> Cobre escolhas como nginx como proxy reverso, padrão BFF, algoritmo de geração de login, Docker Compose e demais trade-offs.
 
-<!-- Adicione o print abaixo -->
-![Tela inicial UniAccess](./prints/02-tela-inicial.png)
+[![Assista ao vídeo no YouTube](https://img.youtube.com/vi/754q7458muI/maxresdefault.jpg)](https://youtu.be/754q7458muI)
+
+> 🔗 Link direto: https://youtu.be/754q7458muI
 
 ---
 
 ## 2. Fluxo de cadastro — sucesso
+
+### 🎬 Vídeo demonstração — Cadastro e login pelo frontend
+
+> Demonstração completa do fluxo de cadastro e acesso via login diretamente pela interface web.  
+> Cobre desde o preenchimento do formulário de cadastro até o login bem-sucedido com o código gerado.
+
+[![Assista ao vídeo no YouTube](https://img.youtube.com/vi/U2H1cLV6w0E/maxresdefault.jpg)](https://youtu.be/U2H1cLV6w0E)
+
+> 🔗 Link direto: https://youtu.be/U2H1cLV6w0E
+
+---
 
 ### Formulário preenchido com dados válidos
 
