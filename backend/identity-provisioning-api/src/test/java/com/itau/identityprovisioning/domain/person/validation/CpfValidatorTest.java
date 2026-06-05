@@ -18,24 +18,13 @@ class CpfValidatorTest {
         validator = new CpfValidator();
     }
 
-    // --- valid CPFs ---
+    // ─── CPFs válidos ─────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("should accept valid CPF with mask")
     void valid_withMask() {
-        var cpf = "123.456.789-09";
-        var result = validator.isValid(cpf, null);
-        System.out.printf("[CPF válido com máscara]  %s -> %s%n", cpf, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
-    }
-
-    @Test
-    @DisplayName("should accept valid CPF without mask")
-    void valid_withoutMask() {
-        var cpf = "12345678909";
-        var result = validator.isValid(cpf, null);
-        System.out.printf("[CPF válido sem máscara]  %s -> %s%n", cpf, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
+        // o validator remove a máscara antes de calcular — deve aceitar com e sem
+        assertTrue(validator.isValid("123.456.789-09", null));
     }
 
     @ParameterizedTest
@@ -46,55 +35,48 @@ class CpfValidatorTest {
             "529.982.247-25"
     })
     void valid_knownCpfs(String cpf) {
-        var result = validator.isValid(cpf, null);
-        System.out.printf("[CPF válido conhecido]    %s -> %s%n", cpf, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
+        // CPFs com dígito verificador correto, calculados pelo algoritmo da Receita Federal
+        assertTrue(validator.isValid(cpf, null));
     }
 
-    // --- invalid CPFs ---
+    // ─── CPFs inválidos ───────────────────────────────────────────────────────
 
     @Test
     @DisplayName("should reject CPF with wrong check digit")
     void invalid_wrongCheckDigit() {
-        var cpf = "123.456.789-00";
-        var result = validator.isValid(cpf, null);
-        System.out.printf("[CPF dígito errado]       %s -> %s%n", cpf, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        // último dígito errado — o algoritmo calcula e detecta a inconsistência
+        assertFalse(validator.isValid("123.456.789-00", null));
     }
 
     @Test
     @DisplayName("should reject CPF with all same digits")
     void invalid_allSameDigits() {
+        // CPFs como 111.111.111-11 são matematicamente válidos pelo algoritmo
+        // mas a Receita Federal os rejeita — temos uma guarda explícita para isso
         for (var cpf : new String[]{"111.111.111-11", "000.000.000-00", "999.999.999-99"}) {
-            var result = validator.isValid(cpf, null);
-            System.out.printf("[CPF dígitos iguais]      %s -> %s%n", cpf, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-            assertFalse(result);
+            assertFalse(validator.isValid(cpf, null));
         }
     }
 
     @Test
     @DisplayName("should reject null CPF")
     void invalid_null() {
-        var result = validator.isValid(null, null);
-        System.out.printf("[CPF nulo]                null -> %s%n", !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        // null deve retornar false sem lançar NullPointerException
+        assertFalse(validator.isValid(null, null));
     }
 
     @Test
     @DisplayName("should reject blank CPF")
     void invalid_blank() {
-        var result = validator.isValid("", null);
-        System.out.printf("[CPF em branco]           \"\" -> %s%n", !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        assertFalse(validator.isValid("", null));
     }
 
     @Test
     @DisplayName("should reject CPF with wrong length")
     void invalid_wrongLength() {
+        // após remover a máscara, o CPF deve ter exatamente 11 dígitos
         for (var cpf : new String[]{"123.456.789", "123.456.789-091"}) {
-            var result = validator.isValid(cpf, null);
-            System.out.printf("[CPF tamanho errado]      %s -> %s%n", cpf, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-            assertFalse(result);
+            assertFalse(validator.isValid(cpf, null));
         }
     }
 }

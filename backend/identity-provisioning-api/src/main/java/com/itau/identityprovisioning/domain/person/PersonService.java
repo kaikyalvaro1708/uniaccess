@@ -53,13 +53,13 @@ public class PersonService {
 
     public PersonDetailsData findByLogin(String login) {
         var person = repository.findByLogin(login)
-                .orElseThrow(() -> new PersonNotFoundException(0L));
+                .orElseThrow(() -> new PersonNotFoundException("login", login));
         return new PersonDetailsData(person);
     }
 
     public PersonDetailsData findByEmail(String email) {
         var person = repository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new PersonNotFoundException(0L));
+                .orElseThrow(() -> new PersonNotFoundException("email", email));
         return new PersonDetailsData(person);
     }
 

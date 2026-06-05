@@ -2,7 +2,6 @@ package com.itau.identityprovisioning.domain.person;
 
 import java.time.LocalDateTime;
 
-// lightweight projection used in list responses — avoids sending full address details for every item
 public record PersonSummaryData(
         Long id,
         String fullName,

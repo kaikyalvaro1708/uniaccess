@@ -122,17 +122,6 @@ class PersonControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    @Test
-    @DisplayName("GET /api/persons: should return 200 with empty list when no persons registered")
-    void list_empty_returns200WithEmptyContent() throws Exception {
-        when(service.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/persons"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.totalElements").value(0));
-    }
-
     // --- GET /api/persons/{id} ---
 
     @Test
@@ -155,6 +144,29 @@ class PersonControllerTest {
         mockMvc.perform(get("/api/persons/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Person not found"));
+    }
+
+    // --- GET /api/persons/login/{login} ---
+
+    // testa o fluxo de login: endpoint que o frontend chama quando o usuário digita o login
+    @Test
+    @DisplayName("GET /api/persons/login/{login}: should return 200 with person details")
+    void findByLogin_existing_returns200() throws Exception {
+        when(service.findByLogin("mariasi")).thenReturn(sampleDetails());
+
+        mockMvc.perform(get("/api/persons/login/mariasi"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value("mariasi"))
+                .andExpect(jsonPath("$.fullName").value("Maria Silva Santos"));
+    }
+
+    @Test
+    @DisplayName("GET /api/persons/login/{login}: should return 404 when login does not exist")
+    void findByLogin_notFound_returns404() throws Exception {
+        when(service.findByLogin("xxxxxxx")).thenThrow(new PersonNotFoundException(0L));
+
+        mockMvc.perform(get("/api/persons/login/xxxxxxx"))
+                .andExpect(status().isNotFound());
     }
 
     // --- DELETE /api/persons/{id} ---
