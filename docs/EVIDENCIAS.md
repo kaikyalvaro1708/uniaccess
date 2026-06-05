@@ -1,7 +1,7 @@
 # Evidências de Testes — UniAccess
 
 > Documento de evidências do funcionamento da aplicação.  
-> Os prints abaixo cobrem todos os fluxos exigidos pelo case técnico.
+> Cobre todos os fluxos exigidos pelo case técnico — prints e testes automatizados.
 
 ---
 
@@ -217,7 +217,6 @@
 
 <!-- Adicione o print abaixo -->
 ![Testes automatizados passando](./prints/22-testes-automatizados.png)
-
 ---
 
 ### CI/GitHub Actions — pipeline verde
@@ -247,5 +246,3 @@
 <!-- Adicione o print abaixo -->
 ![POST /api/persons via Swagger](./prints/25-swagger-post-persons.png)
 ---
-
-*Evidências geradas durante o período de desenvolvimento e testes do case técnico.*

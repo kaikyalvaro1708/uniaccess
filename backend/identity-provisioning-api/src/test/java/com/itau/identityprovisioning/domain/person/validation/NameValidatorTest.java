@@ -9,6 +9,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// o NameValidator usa o regex ^\p{L}+(\s+\p{L}+)+$
+// \p{L} aceita qualquer letra Unicode — incluindo acentos, cedilha e til
 class NameValidatorTest {
 
     private NameValidator validator;
@@ -18,44 +20,26 @@ class NameValidatorTest {
         validator = new NameValidator();
     }
 
-    // --- valid names ---
+    // ─── nomes válidos ────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("should accept name with two words")
     void valid_twoWords() {
-        var name = "Maria Silva";
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome válido - 2 palavras]   '%s' -> %s%n", name, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
+        // mínimo exigido: nome + sobrenome
+        assertTrue(validator.isValid("Maria Silva", null));
     }
 
     @Test
     @DisplayName("should accept name with three words")
     void valid_threeWords() {
-        var name = "Joao Pedro Alves";
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome válido - 3 palavras]   '%s' -> %s%n", name, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
+        assertTrue(validator.isValid("Joao Pedro Alves", null));
     }
 
     @Test
     @DisplayName("should accept name with leading and trailing spaces")
     void valid_extraSpacesTrimmed() {
-        var name = "  Maria Silva  ";
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome válido - espaços extra] '%s' -> %s%n", name.trim(), result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
-    }
-
-    // --- invalid names ---
-
-    @Test
-    @DisplayName("should reject single-word name")
-    void invalid_singleWord() {
-        var name = "Maria";
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome inválido - 1 palavra]  '%s' -> %s%n", name, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        // o isValid faz trim antes de aplicar o regex
+        assertTrue(validator.isValid("  Maria Silva  ", null));
     }
 
     @ParameterizedTest
@@ -67,43 +51,51 @@ class NameValidatorTest {
             "Francois Dupont"
     })
     void valid_plainAsciiNames(String name) {
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome sem acento]            '%s' -> %s%n", name, result ? "ACEITO ✓" : "REJEITADO ✗");
-        assertTrue(result);
+        assertTrue(validator.isValid(name, null));
+    }
+
+    @Test
+    @DisplayName("should accept names with accents and cedilha")
+    void valid_accentedName() {
+        // \p{L} aceita letras Unicode — "João" e "Conceição" são válidos
+        assertTrue(validator.isValid("João Conceição Silva", null));
+    }
+
+    // ─── nomes inválidos ──────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("should reject single-word name")
+    void invalid_singleWord() {
+        // o regex exige pelo menos um bloco (\s+\p{L}+) após o primeiro token
+        assertFalse(validator.isValid("Maria", null));
     }
 
     @Test
     @DisplayName("should reject name containing digits")
     void invalid_withDigits() {
-        var name = "Maria123 Silva";
-        var result = validator.isValid(name, null);
-        System.out.printf("[Nome inválido - dígitos]    '%s' -> %s%n", name, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        // dígitos não são \p{L} — o regex rejeita
+        assertFalse(validator.isValid("Maria123 Silva", null));
     }
 
     @Test
     @DisplayName("should reject name containing special characters")
     void invalid_withSpecialChars() {
+        // hífen e underline não são letras Unicode — rejeitados
         for (var name : new String[]{"Maria-Silva Santos", "Maria_Silva Santos"}) {
-            var result = validator.isValid(name, null);
-            System.out.printf("[Nome inválido - especiais]  '%s' -> %s%n", name, !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-            assertFalse(result);
+            assertFalse(validator.isValid(name, null));
         }
     }
 
     @Test
     @DisplayName("should reject null name")
     void invalid_null() {
-        var result = validator.isValid(null, null);
-        System.out.printf("[Nome inválido - nulo]       null -> %s%n", !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        // null é tratado explicitamente antes do regex para evitar NullPointerException
+        assertFalse(validator.isValid(null, null));
     }
 
     @Test
     @DisplayName("should reject blank name")
     void invalid_blank() {
-        var result = validator.isValid("", null);
-        System.out.printf("[Nome inválido - branco]     \"\" -> %s%n", !result ? "REJEITADO corretamente ✓" : "ACEITO incorretamente ✗");
-        assertFalse(result);
+        assertFalse(validator.isValid("", null));
     }
 }

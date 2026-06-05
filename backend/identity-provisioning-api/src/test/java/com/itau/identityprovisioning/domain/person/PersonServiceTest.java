@@ -22,20 +22,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+// @ExtendWith(MockitoExtension) inicializa os mocks automaticamente sem subir o Spring
+// o repositório e o loginGenerator são "dublês" — não tocam no banco real
 @ExtendWith(MockitoExtension.class)
 class PersonServiceTest {
 
     @Mock
-    private PersonRepository repository;
+    private PersonRepository repository;   // simula o banco de dados
 
     @Mock
-    private LoginGenerator loginGenerator;
+    private LoginGenerator loginGenerator; // simula a geração de login
 
+    // injeta os mocks acima no PersonService como se fossem dependências reais
     @InjectMocks
     private PersonService service;
 
-    // --- test data ---
+    // ─── dados de teste reutilizáveis ─────────────────────────────────────────
 
+    // dados válidos de entrada (DTO que vem do frontend)
     private RegisterPersonData validData() {
         return new RegisterPersonData(
                 "Maria Silva Santos",
@@ -51,6 +55,7 @@ class PersonServiceTest {
         );
     }
 
+    // entidade Person já persistida (simula o que viria do banco)
     private Person samplePerson() {
         return new Person(
                 1L, "Maria Silva Santos", "12345678909",
@@ -61,66 +66,56 @@ class PersonServiceTest {
         );
     }
 
-    // --- register ---
+    // ─── register ────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("register: should save person and return details with generated login")
     void register_success_returnsPersonDetailsWithLogin() {
+        // configura os mocks: CPF não existe, login gerado é "mariasi", save devolve o objeto
         when(repository.existsByDocument("12345678909")).thenReturn(false);
         when(loginGenerator.generate(eq("Maria Silva Santos"), any())).thenReturn("mariasi");
         when(repository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
 
         var result = service.register(validData());
 
-        System.out.printf("[cadastro] Maria Silva Santos -> login gerado: '%s' ✓%n", result.login());
+        // verifica que o retorno tem o login gerado e o nome correto
         assertNotNull(result);
         assertEquals("mariasi", result.login());
         assertEquals("Maria Silva Santos", result.fullName());
+
+        // garante que o save foi chamado exatamente uma vez
         verify(repository).save(any(Person.class));
     }
 
     @Test
     @DisplayName("register: should throw DocumentAlreadyExistsException when document is taken")
     void register_duplicateDocument_throwsDocumentAlreadyExistsException() {
+        // simula CPF já cadastrado no banco
         when(repository.existsByDocument("12345678909")).thenReturn(true);
 
-        System.out.printf("[cadastro duplicado] documento '123.456.789-09' já existe -> excecao esperada ✓%n");
+        // deve lançar a exceção sem chegar a salvar ou gerar login
         assertThrows(DocumentAlreadyExistsException.class, () -> service.register(validData()));
 
         verify(repository, never()).save(any());
         verify(loginGenerator, never()).generate(any(), any());
     }
 
-    @Test
-    @DisplayName("register: should strip document mask before checking uniqueness")
-    void register_stripsDocumentMaskBeforeChecking() {
-        when(repository.existsByDocument("12345678909")).thenReturn(false);
-        when(loginGenerator.generate(any(), any())).thenReturn("mariasi");
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.register(validData());
-
-        System.out.printf("[documento limpo] '123.456.789-09' comparado como '12345678909' ✓%n");
-        verify(repository).existsByDocument("12345678909");
-    }
-
-    // --- findAll ---
+    // ─── findAll ─────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("findAll: should return a page of PersonSummaryData")
     void findAll_returnsPageOfSummaries() {
+        // retorna uma página com 1 pessoa
         var page = new PageImpl<>(List.of(samplePerson()));
         when(repository.findAll(any(Pageable.class))).thenReturn(page);
 
         var result = service.findAll(Pageable.unpaged());
 
-        System.out.printf("[listar] %d pessoa(s) retornada(s), login: '%s' ✓%n",
-                result.getTotalElements(), result.getContent().get(0).login());
         assertEquals(1, result.getTotalElements());
         assertEquals("mariasi", result.getContent().get(0).login());
     }
 
-    // --- findById ---
+    // ─── findById ────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("findById: should return person details when id exists")
@@ -129,7 +124,6 @@ class PersonServiceTest {
 
         var result = service.findById(1L);
 
-        System.out.printf("[buscar por id] id=1 -> '%s' (login: %s) ✓%n", result.fullName(), result.login());
         assertEquals(1L, result.id());
         assertEquals("mariasi", result.login());
     }
@@ -137,13 +131,35 @@ class PersonServiceTest {
     @Test
     @DisplayName("findById: should throw PersonNotFoundException when id does not exist")
     void findById_notFound_throwsPersonNotFoundException() {
+        // Optional.empty() simula "nenhuma linha encontrada no banco"
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        System.out.printf("[buscar por id] id=99 nao existe -> excecao esperada ✓%n");
         assertThrows(PersonNotFoundException.class, () -> service.findById(99L));
     }
 
-    // --- delete ---
+    // ─── findByLogin ─────────────────────────────────────────────────────────
+    // fluxo de login: usuário informa o login gerado e o sistema devolve os dados
+
+    @Test
+    @DisplayName("findByLogin: should return person details when login exists")
+    void findByLogin_existing_returnsPersonDetails() {
+        when(repository.findByLogin("mariasi")).thenReturn(Optional.of(samplePerson()));
+
+        var result = service.findByLogin("mariasi");
+
+        assertEquals("mariasi", result.login());
+        assertEquals("Maria Silva Santos", result.fullName());
+    }
+
+    @Test
+    @DisplayName("findByLogin: should throw PersonNotFoundException when login does not exist")
+    void findByLogin_notFound_throwsPersonNotFoundException() {
+        when(repository.findByLogin("xxxxxxx")).thenReturn(Optional.empty());
+
+        assertThrows(PersonNotFoundException.class, () -> service.findByLogin("xxxxxxx"));
+    }
+
+    // ─── delete ──────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("delete: should remove person when id exists")
@@ -152,7 +168,7 @@ class PersonServiceTest {
 
         service.delete(1L);
 
-        System.out.printf("[deletar] id=1 removido com sucesso ✓%n");
+        // verifica que deleteById foi chamado com o id correto
         verify(repository).deleteById(1L);
     }
 
@@ -161,8 +177,9 @@ class PersonServiceTest {
     void delete_notFound_throwsPersonNotFoundException() {
         when(repository.existsById(99L)).thenReturn(false);
 
-        System.out.printf("[deletar] id=99 nao existe -> excecao esperada ✓%n");
         assertThrows(PersonNotFoundException.class, () -> service.delete(99L));
+
+        // garante que não tentou deletar nada quando o id não existe
         verify(repository, never()).deleteById(any());
     }
 }
